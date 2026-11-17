@@ -1,0 +1,17 @@
+{
+  "actual": {
+    "tipo": "EMISION",
+    "inicio": "2026-10-05",
+    "fin": "2026-11-27",
+    "semanas": 8
+  },
+  "siguiente": {
+    "tipo": "PAY DOWN",
+    "inicio": "2026-11-30",
+    "fin": "2027-01-15",
+    "semanas": 7,
+    "hasta_horizonte": true
+  },
+  "ultima_lectura": "2026-11-17",
+  "revisado": "2026-11-17 17:22:00-05:00"
+}
