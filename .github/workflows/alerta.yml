@@ -1,0 +1,38 @@
+name: Alerta Tesoro (Telegram)
+
+on:
+  schedule:
+    # Todos los dias 12:30 pm hora Bogota (17:30 UTC), despues de los anuncios del Tesoro
+    - cron: "30 17 * * *"
+  workflow_dispatch:
+    inputs:
+      prueba:
+        description: "Mandar el estado actual aunque no haya cambio"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  alerta:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Revisar fases y avisar
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APP_URL: ${{ vars.APP_URL }}
+        run: python alerta.py ${{ inputs.prueba && '--prueba' || '' }}
+      - name: Guardar estado
+        run: |
+          git config user.name "alerta-tesoro"
+          git config user.email "alerta-tesoro@users.noreply.github.com"
+          git add estado.json
+          git diff --cached --quiet || (git commit -m "Estado de la alerta" && git push)
