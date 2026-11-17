@@ -63,7 +63,8 @@ def leer_fases(res: dict) -> dict:
 
 
 def accion(tipo: str) -> str:
-    return "AMPLIAR riesgo" if tipo == "PAY DOWN" else "REDUCIR riesgo"
+    return ("vender en máximos / tomar ganancias" if tipo == "PAY DOWN"
+            else "acumular por partes (zona de compra)")
 
 
 def icono(tipo: str) -> str:

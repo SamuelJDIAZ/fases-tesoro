@@ -527,36 +527,39 @@ def lectura(res: dict, diario: pd.DataFrame, activo: str) -> dict:
     dd, cerca_max = cp["dd"], cp["dd"] > -5
     tipo = a["tipo"] if a else ("EMISION" if s is None or s["tipo"] == "PAY DOWN" else "PAY DOWN")
 
-    if tipo == "PAY DOWN":
-        if s and s["tipo"] == "EMISION" and dias_sig is not None and dias_sig <= 7:
-            acc = "TOMAR GANANCIAS PARCIALES"
-            txt = (f"El pay down termina pronto: viene emisión neta desde el {f(s['inicio'])}. "
-                   "No abriría largos nuevos; asegurar parte de las ganancias.")
+    # Estrategia: ACUMULAR durante el settlement (emision neta, precio debil)
+    #             VENDER ALTO durante el pay down (liquidez, precio fuerte)
+    if tipo == "EMISION":
+        if s and s["tipo"] == "PAY DOWN" and dias_sig is not None and dias_sig <= 10:
+            acc = "ACUMULAR (ÚLTIMAS COMPRAS)"
+            txt = (f"Quedan ~{dias_sig} días de settlement: el pay down empieza el {f(s['inicio'])}. "
+                   "Son los últimos días para comprar antes de que entre la liquidez.")
+        elif cerca_max:
+            acc = "ESPERAR RETROCESO"
+            txt = (f"Estamos en settlement pero el precio sigue cerca del máximo ({dd:+.0f} %). "
+                   "No comprar arriba: esperar a que corrija para acumular.")
         elif dd <= -10:
             acc = "ACUMULAR"
-            txt = (f"El Tesoro está devolviendo liquidez y el precio está {abs(dd):.0f} % bajo su máximo de 3 meses. "
-                   "Buen momento para acumular por partes o abrir largos.")
+            txt = (f"Settlement con el precio {abs(dd):.0f} % bajo su máximo de 3 meses: zona de acumulación. "
+                   "Comprar por partes (DCA)"
+                   + (f" antes del pay down del {f(s['inicio'])}." if s and s["tipo"] == "PAY DOWN" else "."))
         else:
-            acc = "HOLD / ACUMULAR EN RETROCESOS"
-            txt = ("Fase de pay down (liquidez a favor). Mantener posiciones y aprovechar caídas para sumar"
-                   + (f"; dura hasta el {f(a['fin'])}." if a else "."))
-    else:  # EMISION (settlement)
-        if s and s["tipo"] == "PAY DOWN" and dias_sig is not None and dias_sig <= 10:
-            acc = "PREPARAR COMPRAS"
-            txt = (f"Viene pay down desde el {f(s['inicio'])} (~{s['semanas'] * 7} días). "
-                   "Esperar a esa fecha para acumular o abrir largos; si cae antes, comprar escalonado.")
+            acc = "ACUMULAR DE A POCO"
+            txt = ("Settlement con caída moderada. Ir comprando por partes y guardar liquidez por si cae más"
+                   + (f"; el pay down llega el {f(s['inicio'])}." if s and s["tipo"] == "PAY DOWN" else "."))
+    else:  # PAY DOWN
+        if s and s["tipo"] == "EMISION" and dias_sig is not None and dias_sig <= 7:
+            acc = "VENDER / TOMAR GANANCIAS"
+            txt = (f"El pay down termina pronto: el settlement vuelve el {f(s['inicio'])}. "
+                   "Vender en fuerza y cerrar largos antes de que se retire la liquidez.")
         elif cerca_max:
-            acc = "REDUCIR RIESGO / TOMAR GANANCIAS"
-            txt = (f"Fase de emisión (el Tesoro absorbe liquidez) con el precio cerca del máximo "
-                   f"({dd:+.0f} % del máximo de 3 meses). Históricamente es mal momento para comprar arriba.")
-        elif s and s["tipo"] == "PAY DOWN":
-            acc = "ESPERAR"
-            txt = (f"Sigue la emisión neta. Esperar al pay down del {f(s['inicio'])} para seguir acumulando "
-                   "o abrir largos.")
+            acc = "VENDER ALTO (PARCIAL)"
+            txt = (f"Pay down con el precio cerca del máximo ({dd:+.0f} %). Buen momento para vender una parte "
+                   "y asegurar ganancias" + (f"; la fase dura hasta el {f(a['fin'])}." if a else "."))
         else:
-            acc = "ESPERAR"
-            txt = ("Sigue la emisión neta y no se ve pay down en las próximas 8 semanas. "
-                   "Evitar largos apalancados; acumular solo de a poco si ya tienes plan de DCA.")
+            acc = "HOLD"
+            txt = ("Pay down en curso (liquidez a favor). Mantener y dejar correr; vender en máximos"
+                   + (f" antes del {f(a['fin'])}." if a else "."))
     return {"activo": activo, "accion": acc, "texto": txt, "fase": tipo, "contexto": cp, "fases": fc}
 
 

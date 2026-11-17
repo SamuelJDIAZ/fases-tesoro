@@ -112,11 +112,11 @@ col = VERDE if verde else ROJO
 h1, h2 = st.columns([1.35, 1])
 with h1:
     fa, fs = s["fase_actual"], s["fase_siguiente"]
-    estado = "PAY DOWN EN CAMINO" if verde else "EMISIÓN NETA"
-    lectura = ("El Tesoro devuelve liquidez. Históricamente estas fases han sido mejores para el activo "
-               "→ <b>momento de considerar ampliar riesgo</b>." if verde else
-               "El Tesoro absorbe liquidez. Históricamente estas fases han sido más débiles "
-               "→ <b>momento de considerar reducir riesgo</b>.")
+    estado = "PAY DOWN EN CAMINO" if verde else "SETTLEMENT · EMISIÓN NETA"
+    lectura = ("El Tesoro devuelve liquidez y los precios suelen subir "
+               "→ <b>fase para mantener y vender en máximos</b>." if verde else
+               "El Tesoro absorbe liquidez y los precios suelen estar débiles "
+               "→ <b>fase para acumular por partes</b> antes del próximo pay down.")
     extra = ""
     c = s["corte_para_paydown"]
     if not verde and c == c:
