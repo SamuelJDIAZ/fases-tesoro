@@ -9,7 +9,7 @@ on:
       prueba:
         description: "Mandar el estado actual aunque no haya cambio"
         type: boolean
-        default: false
+        default: true
 
 permissions:
   contents: write
