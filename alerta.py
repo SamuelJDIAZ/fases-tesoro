@@ -163,10 +163,13 @@ def enviar(texto: str) -> None:
     if not token or not chat:
         print("[sin TELEGRAM_TOKEN/TELEGRAM_CHAT_ID] Mensaje:\n" + texto)
         return
-    r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
-                      data={"chat_id": chat, "text": texto, "parse_mode": "HTML",
-                            "disable_web_page_preview": "true"}, timeout=30)
-    r.raise_for_status()
+    # Varios destinatarios separados por coma: tu Id, el de un amigo, o un canal (@micanal)
+    for c in [c.strip() for c in chat.split(",") if c.strip()]:
+        r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                          data={"chat_id": c, "text": texto, "parse_mode": "HTML",
+                                "disable_web_page_preview": "true"}, timeout=30)
+        if not r.ok:
+            print(f"No pude enviar a {c}: {r.text[:200]}")
 
 
 def mostrar_chat_id() -> None:

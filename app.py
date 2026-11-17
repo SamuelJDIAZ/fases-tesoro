@@ -86,7 +86,7 @@ with st.expander("Opciones avanzadas (no hace falta tocarlas)"):
 @st.cache_data(ttl=1800, show_spinner="Descargando anuncios del Tesoro…")
 def cargar_tesoro(desde, horizonte, ajuste, min_sem, estacional, version=3):
     res = api.calcular_tesoro(str(desde), horizonte, ajuste, min_sem, estacional=estacional)
-    res["actualizado"] = dt.datetime.now()
+    res["actualizado"] = pd.Timestamp.now(tz="America/Bogota")
     return res
 
 
@@ -122,11 +122,15 @@ with h1:
     if not verde and c == c:
         extra = (f"<div class='aviso'>Pasa a verde si el Tesoro recorta ≈<b>{c:.0f} %</b> más de lo estimado "
                  "en los bills que aún no anuncia. Se recalcula solo con cada anuncio (martes y jueves).</div>")
+    fc = api.fases_clave(res)
+    nom = {"EMISION": "Settlement (emisión neta)", "PAY DOWN": "Pay down"}
     fase_txt = ""
-    if fa:
-        fase_txt += f"Fase actual: <b>{fa['tipo']}</b> desde {pd.Timestamp(fa['inicio']):%d %b %Y}"
-    if fs:
-        fase_txt += f" · Siguiente estimada: <b>{fs['tipo']}</b> desde {pd.Timestamp(fs['inicio']):%d %b}"
+    if fc["actual"]:
+        fase_txt += f"Fase actual: <b>{nom[fc['actual']['tipo']]}</b> desde {fc['actual']['inicio']:%d %b %Y}"
+    if fc["siguiente"]:
+        fs_ = fc["siguiente"]
+        fase_txt += (f" · Siguiente estimada: <b>{nom[fs_['tipo']]}</b> desde el {fs_['inicio']:%d %b} "
+                     f"(~{fs_['semanas'] * 7} días)")
     st.markdown(f"""
     <div class="card hero" style="--c:{col}">
       <div class="estado"><span class="punto"></span>{estado}</div>
@@ -172,7 +176,7 @@ with h2:
               f"Fases rojas al alza: {(r['activo_pct'] > 0).sum()} de {len(r)}", 0),
         unsafe_allow_html=True)
 
-st.caption(f"Datos descargados {res['actualizado']:%d %b %H:%M} · se renuevan solos cada 30 min · "
+st.caption(f"Datos descargados {res['actualizado']:%d %b %H:%M} (hora Bogotá) · se renuevan solos cada 30 min · "
            "Fuentes: TreasuryDirect (subastas de bills) y Yahoo Finance / Stooq (precios).")
 
 # ---------------------------------------------------------------- Pestañas

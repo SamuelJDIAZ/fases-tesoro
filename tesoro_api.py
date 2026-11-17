@@ -425,7 +425,7 @@ def estadisticas(semanal: pd.DataFrame, fz: pd.DataFrame, px_sem: pd.DataFrame) 
 def calcular_tesoro(desde: str = "2025-10-01", horizonte: int = 8, ajuste_pct: float = 0.0,
                     min_semanas: int = 3, hoy=None, estacional: bool = True) -> dict:
     """Solo la parte del Tesoro (no necesita precios). La usa tambien la alerta de Telegram."""
-    hoy = pd.Timestamp(hoy or dt.date.today()).normalize()
+    hoy = pd.Timestamp(hoy or pd.Timestamp.now(tz="America/Bogota").date()).normalize()
     # Un ano extra: para saber que vence (52-week) y para el patron estacional del ano pasado
     desde_sub = min(pd.Timestamp(desde) - pd.Timedelta(days=380), hoy - pd.Timedelta(days=400))
     sub = subastas_bills(desde_sub.strftime("%Y-%m-%d"))
